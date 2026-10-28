@@ -1,0 +1,917 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Application d'aide à l'arrêt du tabac fondée sur les études Cochrane.">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Arrête">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Cap Zéro Cigarette</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout : une colonne lisible (720px max), barre d'onglets en bas, bouton « Envie de fumer » toujours à portée de pouce. */
+:root{
+  --bg:#eef3f1;          /* air frais, gris-vert très clair */
+  --surface:#ffffff;
+  --sunk:#e1e9e6;
+  --ink:#15241f;
+  --muted:#4f625b;
+  --line:#c9d6d1;
+  --air:#0b7a62;         /* accent : oxygène */
+  --air-soft:#d3ece4;
+  --ember:#b4471b;       /* braise : rechute, alertes */
+  --ember-soft:#f6e1d6;
+  --ok:#1f7a3a;
+  --sos:#163a4a;         /* bleu nuit apaisant pour l'aide immédiate */
+  --sos-ink:#ffffff;
+  --band:#ffffff;--band-ink:#15241f;--band-muted:#4f625b;--band-faint:#dde6e2;--band-accent:#d2551e; /* bandeau blanc ; le point final = braise éteinte */
+  --display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1715;--surface:#17221f;--sunk:#1f2c28;--ink:#e6efeb;--muted:#9fb3ab;--line:#2e3f3a;
+  --air:#4cc7a4;--air-soft:#173a31;--ember:#ef8a5d;--ember-soft:#3a2219;--ok:#6fd38c;--sos:#2f6d86;--sos-ink:#ffffff;
+  --band:#ffffff;--band-ink:#15241f;--band-muted:#4f625b;--band-faint:#dde6e2;--band-accent:#d2551e;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1715;--surface:#17221f;--sunk:#1f2c28;--ink:#e6efeb;--muted:#9fb3ab;--line:#2e3f3a;
+  --air:#4cc7a4;--air-soft:#173a31;--ember:#ef8a5d;--ember-soft:#3a2219;--ok:#6fd38c;--sos:#2f6d86;--sos-ink:#ffffff;
+  --band:#ffffff;--band-ink:#15241f;--band-muted:#4f625b;--band-faint:#dde6e2;--band-accent:#d2551e;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.55;
+  padding-block:0 calc(150px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--band)}
+.wrap{max-width:752px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#view{padding-block:24px 0}
+h1,h2,h3{font-family:var(--display);font-stretch:85%;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:1.9rem;font-weight:800}
+h2{font-size:1.35rem;font-weight:750}
+h3{font-size:1.08rem;font-weight:700}
+p{margin:0}
+a{color:var(--air);text-underline-offset:3px}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums;font-stretch:90%}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.eyebrow{font-family:var(--display);font-size:.78rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.stack{display:flex;flex-direction:column;gap:14px}
+.stack-lg{display:flex;flex-direction:column;gap:26px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+/* Bandeau « ARRÊTE. » */
+.band{background:var(--band);color:var(--band-ink);overflow:hidden;border-bottom:1px solid var(--line)}
+.band .in{max-width:752px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 26px;display:flex;flex-direction:column;gap:10px}
+.brandrow{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brandrow .mark{font-family:var(--display);font-weight:800;font-size:.78rem;letter-spacing:.16em;text-transform:uppercase;color:var(--band-muted)}
+.sync{font-size:.8rem;color:var(--band-muted)}
+.stopword{display:inline-block;align-self:flex-start;font-family:var(--display);font-weight:900;font-stretch:72%;font-size:clamp(5rem,24vw,11.5rem);line-height:.8;letter-spacing:-.012em;margin:8px 0 2px;white-space:nowrap;
+  animation:settle 1.1s cubic-bezier(.2,.7,.2,1) both}
+.stopword .ember{color:var(--band-accent)}
+@keyframes settle{from{letter-spacing:.09em}to{letter-spacing:-.012em}}
+@media (prefers-reduced-motion:reduce){.stopword{animation:none}}
+.tagline{font-size:1.1rem;color:var(--band-ink);max-width:34ch}
+.tagline em{font-style:normal;color:var(--band-muted)}
+.bandstatus{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--band-faint);padding-top:14px;margin-top:4px}
+.bandstatus .line{font-family:var(--display);font-stretch:85%;font-weight:750;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.bandstatus .line b{color:var(--band-accent);font-weight:800}
+.sticks{display:flex;flex-wrap:wrap;gap:5px}
+.sticks i{width:9px;height:30px;border-radius:2px 2px 3px 3px;background:var(--band-faint)}
+.sticks i.on{background:var(--band-ink)}
+.sticks-l{font-size:.88rem;color:var(--band-muted)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.card.flat{background:transparent;border:none;padding:0}
+.card.air{background:var(--air-soft);border-color:transparent}
+.card.ember{background:var(--ember-soft);border-color:transparent}
+.hero{padding:22px 20px}
+.big{font-size:3.4rem;font-weight:800;line-height:1;letter-spacing:-.01em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--sunk);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat .v{font-size:1.55rem;font-weight:800}
+.stat .l{font-size:.82rem;color:var(--muted);line-height:1.3}
+@media (max-width:460px){.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.big{font-size:2.8rem}}
+
+button{font:inherit;cursor:pointer;color:inherit}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:10px 18px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-weight:700}
+.btn.primary{background:var(--air);border-color:var(--air);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#062a20}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary{color:#062a20}}
+.btn.ember{border-color:var(--ember);color:var(--ember);background:transparent}
+.btn.block{width:100%}
+.btn:focus-visible,.chip:focus-visible,.tab:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--air);outline-offset:2px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 14px;min-height:44px;font-size:.95rem}
+.chip[aria-pressed="true"]{background:var(--air);border-color:var(--air);color:#fff}
+:root[data-theme="dark"] .chip[aria-pressed="true"]{color:#062a20}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip[aria-pressed="true"]{color:#062a20}}
+
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.95rem}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-height:48px;width:100%}
+textarea{min-height:70px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:460px){.grid2{grid-template-columns:1fr}}
+
+.progress{height:10px;border-radius:99px;background:var(--sunk);overflow:hidden}
+.progress>i{display:block;height:100%;background:var(--air);border-radius:99px}
+
+/* Échelle de temps santé */
+.timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.timeline li{display:grid;grid-template-columns:92px 22px 1fr;gap:10px;align-items:start;padding-block:10px;border-bottom:1px dashed var(--line)}
+.timeline li:last-child{border-bottom:none}
+.timeline .when{font-family:var(--display);font-weight:750;font-stretch:85%;font-variant-numeric:tabular-nums;color:var(--muted)}
+.timeline .dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--line);margin-top:4px;background:var(--surface)}
+.timeline li.done .dot{background:var(--air);border-color:var(--air)}
+.timeline li.done .when{color:var(--air)}
+.timeline li.next{background:var(--air-soft);border-radius:10px;padding-inline:8px;margin-inline:-8px}
+.timeline .src{font-size:.78rem;color:var(--muted)}
+
+/* Cartes de traitement */
+.method{display:flex;flex-direction:column;gap:10px}
+.method.chosen{border:2px solid var(--air)}
+.tag{display:inline-block;font-size:.75rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:6px;background:var(--sunk);color:var(--muted)}
+.tag.air{background:var(--air-soft);color:var(--air)}
+.tag.ember{background:var(--ember-soft);color:var(--ember)}
+.meter{display:flex;align-items:center;gap:10px;font-size:.9rem}
+.meter .bar{flex:1;height:8px;background:var(--sunk);border-radius:99px;position:relative;min-width:0}
+.meter .bar i{position:absolute;top:0;bottom:0;background:var(--air);border-radius:99px;opacity:.85}
+ul.clean{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+details{border-top:1px solid var(--line);padding-top:10px}
+summary{cursor:pointer;font-weight:700;color:var(--air);min-height:32px}
+
+.check{display:flex;gap:12px;align-items:flex-start;padding-block:8px;border-bottom:1px solid var(--line)}
+.check:last-child{border-bottom:none}
+.check input{width:24px;height:24px;min-height:24px;margin-top:2px;flex:none;accent-color:var(--air)}
+
+/* Plan si-alors */
+.ifthen{display:flex;flex-direction:column;gap:8px;padding-block:12px;border-bottom:1px solid var(--line)}
+.ifthen:last-child{border-bottom:none}
+.ifthen .if{font-weight:700}
+
+/* Graphique des envies */
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--body);font-size:11px}
+
+/* Barre d'onglets + bouton SOS */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));padding-bottom:env(safe-area-inset-bottom,0px)}
+.dock .in{max-width:720px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.tab{background:none;border:none;padding:10px 4px 12px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.82rem;color:var(--muted);min-height:58px;font-weight:700}
+.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{color:var(--air)}
+.sosbtn{position:fixed;z-index:21;left:50%;transform:translateX(-50%);bottom:calc(72px + env(safe-area-inset-bottom,0px));
+  background:var(--sos);color:var(--sos-ink);border:none;border-radius:999px;padding:14px 26px;min-height:56px;font-family:var(--display);font-weight:800;font-size:1.1rem;letter-spacing:.01em;
+  box-shadow:0 6px 18px rgba(10,30,40,.28);display:flex;align-items:center;gap:10px;white-space:nowrap}
+.sosbtn .pulse{width:12px;height:12px;border-radius:50%;background:#7fe3c4}
+
+/* Panneau SOS */
+.overlay{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+.overlay .wrap{padding-inline:0;display:flex;flex-direction:column;gap:18px}
+.breath{display:flex;flex-direction:column;align-items:center;gap:14px;padding-block:10px}
+.ring{position:relative;width:220px;height:220px;max-width:100%}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.ring .time .num{font-size:2.6rem;font-weight:800}
+.lung{position:absolute;inset:38px;border-radius:50%;background:var(--air-soft);transform:scale(.72);transition:transform 4s ease-in-out}
+.lung.in{transform:scale(1);transition-duration:4s}
+.lung.out{transform:scale(.72);transition-duration:6s}
+@media (prefers-reduced-motion:reduce){.lung,.lung.in,.lung.out{transition:none}}
+.cue{font-family:var(--display);font-weight:750;font-size:1.25rem;color:var(--air);min-height:1.6em}
+.reasonlist{display:flex;flex-wrap:wrap;gap:8px}
+.reasonlist span{background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-weight:700;font-size:.95rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;max-width:calc(100% - 32px)}
+.phone{font-family:var(--display);font-size:1.8rem;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;user-select:all}
+.srcs li{font-size:.92rem}
+.srcs li span{color:var(--muted)}
+</style>
+
+</head>
+<body>
+<header class="band">
+  <div class="in">
+    <div class="brandrow"><span class="mark">Cap Zéro Cigarette</span><span class="sync" id="sync">Chargement…</span></div>
+    <h1 class="stopword" aria-label="Arrête.">ARRÊTE<span class="ember">.</span></h1>
+    <p class="tagline">Pour de bon. <em>Pas juste une pause.</em></p>
+    <div class="bandstatus" id="bandStatus"></div>
+  </div>
+</header>
+<div class="wrap">
+  <main id="view" aria-live="polite"></main>
+</div>
+
+<button class="sosbtn" id="sosOpen" type="button" aria-haspopup="dialog"><span class="pulse" aria-hidden="true"></span>J'ai envie de fumer</button>
+
+<nav class="dock" aria-label="Sections">
+  <div class="in">
+    <button class="tab" data-tab="today" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Aujourd'hui</button>
+    <button class="tab" data-tab="plan" type="button"><svg viewBox="0 0 24 24"><path d="M9 4h6M8 4H6a1 1 0 0 0-1 1v15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-2"/><path d="m9 13 2 2 4-4"/></svg>Mon plan</button>
+    <button class="tab" data-tab="health" type="button"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Ma santé</button>
+    <button class="tab" data-tab="help" type="button"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1"/></svg>Aide</button>
+  </div>
+</nav>
+
+<div class="overlay" id="sos" role="dialog" aria-modal="true" aria-labelledby="sosTitle" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+"use strict";
+/* ---------- Données de référence (sources dans l'onglet Aide) ---------- */
+const MIN = 60e3, HOUR = 36e5, DAY = 864e5;
+
+const MILESTONES = [
+  {t:20*MIN, w:"20 min", txt:"Le pouls et la tension artérielle redescendent.", src:"OMS"},
+  {t:12*HOUR, w:"12 h", txt:"Le monoxyde de carbone dans le sang revient à un niveau normal. Le sang transporte mieux l'oxygène.", src:"OMS"},
+  {t:2*DAY, w:"48 h", txt:"Le goût et l'odorat commencent à revenir.", src:"HSE Irlande"},
+  {t:3*DAY, w:"3 jours", txt:"La nicotine a quitté le corps. Les bronches se relâchent, respirer devient plus facile. C'est souvent le pic du manque : il va maintenant baisser.", src:"HSE Irlande"},
+  {t:14*DAY, w:"2 sem.", txt:"Pour la plupart des gens, irritabilité, nervosité et troubles du sommeil ont nettement diminué.", src:"Univ. of Michigan, Healthline"},
+  {t:28*DAY, w:"4 sem.", txt:"La plupart des symptômes de manque ont disparu. Les envies restent possibles mais plus rares.", src:"West & Hajek"},
+  {t:84*DAY, w:"12 sem.", txt:"Entre 2 et 12 semaines : circulation et fonction pulmonaire s'améliorent. Marcher et monter les escaliers deviennent plus faciles.", src:"OMS"},
+  {t:274*DAY, w:"9 mois", txt:"Entre 1 et 9 mois : la toux et l'essoufflement diminuent.", src:"OMS"},
+  {t:365*DAY, w:"1 an", txt:"Le risque supplémentaire de maladie coronarienne est réduit de moitié par rapport à un fumeur.", src:"OMS"},
+  {t:3*365*DAY, w:"3 ans", txt:"Environ la moitié du gain d'espérance de vie lié à l'arrêt est déjà acquise.", src:"Cho et al., NEJM Evidence 2024"},
+  {t:5*365*DAY, w:"5 ans", txt:"Entre 5 et 15 ans : le risque d'AVC rejoint celui d'un non-fumeur.", src:"OMS"},
+  {t:10*365*DAY, w:"10 ans", txt:"Le risque de mourir d'un cancer du poumon est environ la moitié de celui d'un fumeur. La survie se rapproche de celle d'un non-fumeur.", src:"OMS ; Cho et al. 2024"},
+  {t:15*365*DAY, w:"15 ans", txt:"Le risque de maladie coronarienne est celui d'un non-fumeur.", src:"OMS"}
+];
+
+const TRIGGERS = [
+  {id:"cafe", label:"Café du matin", plan:"je bois mon café à un autre endroit (pas sur le balcon) et je prends une gomme ou je bois un grand verre d'eau d'abord"},
+  {id:"repas", label:"Après le repas", plan:"je me lève tout de suite de table, je me brosse les dents ou je fais 10 minutes de marche"},
+  {id:"pause", label:"Pause au travail", plan:"je pars marcher 5 minutes dans une autre direction que les fumeurs, ou je prends un fruit"},
+  {id:"voiture", label:"En voiture", plan:"je vide la voiture de tout ce qui touche au tabac, je garde des chewing-gums à portée de main et je mets une émission ou un podcast"},
+  {id:"stress", label:"Stress, énervement", plan:"je fais 1 minute de respiration lente (inspirer 4 s, souffler 6 s) puis je marche"},
+  {id:"alcool", label:"Apéro, alcool", plan:"je limite à un verre les 4 premières semaines, je reste avec des non-fumeurs et je refuse d'avance : « Non merci, j'ai arrêté »"},
+  {id:"ennui", label:"Ennui, temps mort", plan:"j'occupe mes mains (téléphone, stylo, bricolage) et j'ouvre ce bouton « J'ai envie de fumer »"},
+  {id:"fumeurs", label:"Avec des fumeurs", plan:"je préviens que j'arrête et je m'éloigne quand ils sortent fumer"},
+  {id:"telephone", label:"Au téléphone", plan:"je téléphone debout en marchant, sans briquet dans les poches"}
+];
+
+const REASONS = ["Voir grandir mes enfants / petits-enfants","Ma santé, mon cœur","Retrouver du souffle","L'argent économisé","Ma vie sexuelle","Ne plus sentir le tabac","Donner l'exemple","Être libre, ne plus dépendre","Mon couple","Le sport, la forme"];
+
+const METHODS = {
+  varenicline:{
+    name:"Varénicline", tag:"Sur ordonnance", per100:"12 à 16 sur 100", lo:12, hi:16,
+    pitch:"Le médicament le plus étudié. Il réduit l'envie et le plaisir de fumer.",
+    how:["Demandez une ordonnance à votre médecin.","Commencez en général 1 semaine avant le jour J ; le médecin augmente la dose progressivement.","Durée standard : 12 semaines. Prolonger de 12 semaines aide à éviter la rechute.","Effets fréquents : nausées (le prendre en mangeant, avec un grand verre d'eau), rêves intenses."],
+    cost:"En Suisse, un générique existe depuis février 2026. Il n'est en général pas remboursé ; la caisse décide au cas par cas.",
+    weeksBefore:1
+  },
+  nrt:{
+    name:"Patch + gommes (substituts combinés)", tag:"En pharmacie, sans ordonnance", per100:"proche de la varénicline", lo:0, hi:0, estimate:true,
+    pitch:"Un patch pour le fond de nicotine, plus une forme rapide (gomme, pastille, spray) pour chaque envie. Deux produits ensemble marchent mieux qu'un seul.",
+    how:["À 17 cigarettes par jour : patch fort (21 mg/24 h, ou 14 mg selon le pharmacien) + gommes ou pastilles 2 mg à chaque envie.","Option qui augmente les chances : coller le patch 2 à 4 semaines avant le jour J, en continuant de fumer normalement.","Gardez le traitement 8 à 12 semaines, puis baissez progressivement.","Sous-dosage fréquent : si l'envie reste forte, parlez au pharmacien pour augmenter la dose."],
+    cost:"Non remboursé par l'assurance de base. Coût en général inférieur à ce que coûtent les cigarettes sur la même période.",
+    weeksBefore:4
+  },
+  ecig:{
+    name:"Cigarette électronique avec nicotine", tag:"Libre", per100:"10 à 19 sur 100", lo:10, hi:19,
+    pitch:"Les revues Cochrane 2025 et 2026 concluent, avec un haut niveau de confiance, qu'elle aide plus de gens à arrêter que les patchs et gommes.",
+    how:["Condition clé : arrêter complètement la cigarette. Fumer et vapoter en même temps ne protège pas.","Choisissez un liquide avec assez de nicotine pour calmer l'envie (demandez conseil en boutique spécialisée).","Elle n'est pas sans risque et ses effets à très long terme sont moins connus que ceux des médicaments.","Fixez-vous ensuite une date pour arrêter aussi la vape, sans précipitation."],
+    cost:"Achat de l'appareil, puis liquides. Nettement moins cher que 17 cigarettes par jour.",
+    weeksBefore:0
+  },
+  cytisine:{
+    name:"Cytisine", tag:"Sur ordonnance, importée", per100:"10 à 18 sur 100", lo:10, hi:18,
+    pitch:"Agit comme la varénicline, cure plus courte (25 jours) et souvent mieux tolérée.",
+    how:["Pas autorisée en Suisse : le médecin la prescrit et la pharmacie la commande à l'étranger.","Cure standard de 25 jours, arrêt de la cigarette au 5e jour.","N'achetez pas de médicaments sur Internet : c'est interdit en Suisse et la qualité n'est pas garantie."],
+    cost:"Peu coûteuse, non remboursée.",
+    weeksBefore:0
+  },
+  none:{
+    name:"Sans traitement", tag:"Possible, moins efficace", per100:"Nettement plus bas", lo:0, hi:0,
+    pitch:"C'est votre choix. Sachez qu'à 17 cigarettes par jour, la dépendance physique est forte : un traitement augmente nettement les chances.",
+    how:["Appelez au moins la ligne stop-tabac : le conseil double les chances.","Utilisez le bouton « J'ai envie de fumer » à chaque envie.","Vous pouvez ajouter un traitement à tout moment, même après le jour J."],
+    cost:"Gratuit.",
+    weeksBefore:0
+  }
+};
+
+const DEFAULTS = () => ({v:1, age:46, perDay:17, years:23, price:9.5, quitAt:null, method:null, reasons:[], plans:{}, custom:"", cravings:[], lapses:[], checklist:{}, createdAt:Date.now()});
+
+/* ---------- Stockage : base privée Claude si disponible, sinon ce navigateur ---------- */
+const LS_KEY = "capzero.v1";
+let S = DEFAULTS();
+let docRef = null, saving = Promise.resolve(), saveTimer = null, mode = "local";
+
+function lsRead(){ try{ const s = localStorage.getItem(LS_KEY); return s ? JSON.parse(s) : null; }catch(e){ return null; } }
+function lsWrite(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S)); }catch(e){} }
+function merge(obj){ return Object.assign(DEFAULTS(), obj || {}); }
+
+function save(){
+  lsWrite();
+  if(!docRef) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    const body = {state: JSON.parse(JSON.stringify(S)), updatedAt: Date.now()};
+    saving = saving.then(() => docRef.set(body)).then(() => setSync("Enregistré sur votre compte Claude")).catch(() => setSync("Enregistré sur cet appareil"));
+  }, 500);
+}
+function setSync(t){ document.getElementById("sync").textContent = t; }
+
+async function initStore(){
+  const local = lsRead();
+  if(local) S = merge(local);
+  setSync("Enregistré sur cet appareil");
+  render();
+  try{
+    if(!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if(!db || !user) return;
+    const uid = await user.id();
+    if(!uid) return;
+    docRef = db.doc("data/users/" + uid + "/plan");
+    const snap = await docRef.get();
+    if(snap.exists && snap.data() && snap.data().state){
+      const remote = snap.data().state;
+      const localTime = local && local.lastEdit || 0, remoteTime = remote.lastEdit || 0;
+      S = merge(remoteTime >= localTime ? remote : local);
+      lsWrite();
+    } else if(local){
+      save();
+    }
+    mode = "account";
+    setSync("Enregistré sur votre compte Claude");
+    render();
+  }catch(e){ docRef = null; }
+}
+function commit(){ S.lastEdit = Date.now(); save(); render(); }
+
+/* ---------- Calculs ---------- */
+const now = () => Date.now();
+const cigPrice = () => (Number(S.price)||0) / 20;
+function lastLapse(){ return S.lapses.length ? Math.max(...S.lapses.map(l => l.t)) : 0; }
+function sinceStart(){ return S.quitAt ? now() - S.quitAt : -1; }
+function cleanStart(){ return S.quitAt ? Math.max(S.quitAt, lastLapse()) : null; }
+function cleanMs(){ const c = cleanStart(); return c ? Math.max(0, now() - c) : 0; }
+function notSmoked(){ const ms = sinceStart(); if(ms <= 0) return 0; return Math.max(0, Math.floor(ms / DAY * S.perDay) - S.lapses.reduce((a,l)=>a+(l.n||1),0)); }
+function packYears(){ return S.perDay / 20 * S.years; }
+function lifetimeCigs(){ return Math.round(S.perDay * 365.25 * S.years); }
+const fmtCHF = n => n.toLocaleString("fr-CH", {minimumFractionDigits: n < 100 ? 2 : 0, maximumFractionDigits: n < 100 ? 2 : 0});
+const fmtInt = n => Math.round(n).toLocaleString("fr-CH");
+const dateFR = d => new Date(d).toLocaleDateString("fr-CH", {weekday:"long", day:"numeric", month:"long"});
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function dur(ms){
+  const d = Math.floor(ms/DAY), h = Math.floor(ms%DAY/HOUR), m = Math.floor(ms%HOUR/MIN);
+  if(d >= 1) return {big:d, unit: d===1?"jour":"jours", sub:`${h} h ${String(m).padStart(2,"0")} min`};
+  if(h >= 1) return {big:h, unit:"h", sub:`${m} min`};
+  return {big:m, unit:"min", sub:"Chaque minute compte"};
+}
+function phase(){
+  if(!S.quitAt || now() < S.quitAt) return "prep";
+  const d = cleanMs()/DAY;
+  if(d < 7) return "w1"; if(d < 28) return "m1"; if(d < 90) return "m3"; if(d < 365) return "y1"; return "free";
+}
+const PHASES = {
+  w1:{t:"Semaine 1 : la plus importante", b:"Règle d'or : <strong>pas une seule bouffée</strong>. Une étude a montré que la grande majorité de ceux qui refument pendant la première semaine fument de nouveau à 6 mois. Le manque est au plus fort les premiers jours, puis il baisse. Chaque envie dure quelques minutes : utilisez le bouton en bas."},
+  m1:{t:"Semaines 2 à 4 : le manque recule", b:"Irritabilité, nervosité et sommeil s'améliorent en 2 à 4 semaines. Continuez votre traitement à pleine dose, même si vous vous sentez bien. Une marche de 5 à 15 minutes réduit l'envie pendant près de 50 minutes."},
+  m3:{t:"Mois 2 et 3 : attention à la confiance", b:"Les pièges classiques : l'apéro, une fête, une mauvaise nouvelle, et l'idée « une seule, ça ne compte pas ». Terminez la durée complète du traitement. La prise de poids se fait surtout pendant ces 3 premiers mois : marchez chaque jour."},
+  y1:{t:"Mois 4 à 12 : consolider", b:"Les envies sont rares mais peuvent surgir fort, parfois des mois après. C'est normal et ça passe. Si vous prenez de la varénicline, demandez au médecin de prolonger de 12 semaines : c'est ce qui aide le plus à éviter la rechute."},
+  free:{t:"Plus d'un an : vous êtes un ancien fumeur", b:"Vos risques continuent de baisser chaque année. Restez vigilant face à la « seule cigarette » en soirée : c'est ainsi que la plupart des anciens fumeurs rechutent."}
+};
+
+/* ---------- Bandeau du haut ---------- */
+function avoidedToday(){
+  const c = cleanStart(); if(!c || now() < c) return 0;
+  const wake = new Date().setHours(7,0,0,0), sleep = new Date().setHours(23,0,0,0);
+  const from = Math.max(wake, c), to = Math.min(sleep, now());
+  if(to <= from) return 0;
+  return Math.min(S.perDay, Math.floor(S.perDay * (to - from) / (16*HOUR)));
+}
+function renderBand(){
+  const el = document.getElementById("bandStatus"); if(!el) return;
+  if(!S.quitAt){ el.innerHTML = `<p class="line">Première étape : choisir votre jour J.</p>`; return; }
+  if(now() < S.quitAt){
+    const days = Math.ceil((S.quitAt - now())/DAY);
+    el.innerHTML = `<p class="line">Jour J ${esc(dateFR(S.quitAt))} · dans <b>${days} ${days===1?"jour":"jours"}</b></p>`;
+    return;
+  }
+  const D = dur(cleanMs());
+  const n = avoidedToday(), shown = Math.min(S.perDay, 40);
+  const sticks = Array.from({length:shown}, (_,i) => `<i class="${i < n ? "on" : ""}"></i>`).join("");
+  el.innerHTML = `<p class="line">Libre depuis <b>${D.big} ${D.unit}</b>${D.big && D.unit.startsWith("jour") ? ` <span class="sticks-l">${esc(D.sub)}</span>` : ""}</p>
+    <div class="sticks" aria-hidden="true">${sticks}</div>
+    <p class="sticks-l">Aujourd'hui : ${n} cigarette${n>1?"s":""} sur ${S.perDay} évitée${n>1?"s":""}</p>`;
+}
+
+/* ---------- Rendu ---------- */
+let tab = "today";
+const view = document.getElementById("view");
+
+function render(){
+  renderBand();
+  document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-current", b.dataset.tab === tab ? "page" : "false"));
+  const html = tab === "today" ? (S.quitAt ? vToday() : vSetup()) : tab === "plan" ? vPlan() : tab === "health" ? vHealth() : vHelp();
+  view.innerHTML = html;
+  if(tab === "today" && !S.quitAt) bindSetup();
+}
+
+function vSetup(){
+  const d1 = new Date(2026,10,1);
+  const nov1 = d1 > new Date() ? d1 : null;
+  const in2w = new Date(); in2w.setDate(in2w.getDate()+14); in2w.setHours(0,0,0,0);
+  const pickDefault = nov1 || in2w;
+  const iso = x => `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}-${String(x.getDate()).padStart(2,"0")}`;
+  return `<div class="stack-lg">
+  <section class="stack">
+    <p class="eyebrow">Bienvenue</p>
+    <h1>Arrêter pour de bon, avec ce qui marche vraiment</h1>
+    <p class="muted">Trois questions, deux minutes. Vos chiffres sont déjà remplis : corrigez-les si besoin.</p>
+  </section>
+
+  <section class="card stack">
+    <h2>1. Votre profil</h2>
+    <div class="grid2">
+      <label class="f" for="fAge">Âge<input id="fAge" type="number" inputmode="numeric" min="18" max="99" value="${S.age}"></label>
+      <label class="f" for="fPer">Cigarettes par jour<input id="fPer" type="number" inputmode="numeric" min="1" max="80" value="${S.perDay}"></label>
+      <label class="f" for="fYears">Années de tabac<input id="fYears" type="number" inputmode="numeric" min="1" max="70" value="${S.years}"></label>
+      <label class="f" for="fPrice">Prix d'un paquet (CHF)<input id="fPrice" type="number" inputmode="decimal" step="0.1" min="1" value="${S.price}"></label>
+    </div>
+    <p class="small muted" id="profileFacts"></p>
+  </section>
+
+  <section class="card stack">
+    <h2>2. Votre jour J</h2>
+    <p>Les études montrent qu'arrêter d'un coup, à une date fixée, réussit mieux que diminuer petit à petit. Comptez 1 à 2 semaines pour vous préparer.</p>
+    <div class="row" role="group" aria-label="Date suggérée">
+      ${nov1 ? `<button class="chip" type="button" data-date="${iso(nov1)}" aria-pressed="true">Dim. 1er novembre<br><span class="small">Mois sans tabac</span></button>` : ""}
+      <button class="chip" type="button" data-date="${iso(in2w)}" aria-pressed="${nov1 ? "false" : "true"}">Dans 2 semaines</button>
+      <button class="chip" type="button" data-date="now" aria-pressed="false">J'arrête maintenant</button>
+    </div>
+    <label class="f" for="fDate">Ou choisissez une date<input id="fDate" type="date" value="${iso(pickDefault)}"></label>
+    ${nov1 ? `<p class="small muted">En novembre, la Suisse organise le Mois sans tabac : défi collectif, conseils quotidiens. Inscription gratuite sur <a href="https://mois-sans-tabac.ch/" target="_blank" rel="noopener">mois-sans-tabac.ch</a>.</p>` : ""}
+  </section>
+
+  <section class="card stack">
+    <h2>3. Pourquoi vous arrêtez</h2>
+    <p class="muted small">Choisissez ce qui compte pour vous. On vous le rappellera au moment des envies.</p>
+    <div class="row" id="reasonChips">${REASONS.map(r => `<button class="chip" type="button" data-reason="${esc(r)}" aria-pressed="${S.reasons.includes(r)}">${esc(r)}</button>`).join("")}</div>
+  </section>
+
+  <button class="btn primary block" id="startBtn" type="button">Valider mon jour J</button>
+  <p class="small muted">Prochaine étape : choisir votre traitement dans « Mon plan ». C'est ce qui fait la plus grande différence.</p>
+  </div>`;
+}
+
+function bindSetup(){
+  let chosen = view.querySelector('.chip[data-date][aria-pressed="true"]')?.dataset.date || null;
+  const dateInput = view.querySelector("#fDate");
+  const facts = () => {
+    const per = +view.querySelector("#fPer").value || 0, yrs = +view.querySelector("#fYears").value || 0, pr = +view.querySelector("#fPrice").value || 0;
+    const py = per/20*yrs, yearCost = per*365.25*pr/20;
+    view.querySelector("#profileFacts").innerHTML = `Soit environ <strong>${fmtInt(per*365.25*yrs)}</strong> cigarettes fumées, <strong>${py.toFixed(1)}</strong> paquets-années, et <strong>${fmtInt(yearCost)} CHF</strong> par an au prix actuel.`;
+  };
+  facts();
+  ["#fPer","#fYears","#fPrice"].forEach(s => view.querySelector(s).addEventListener("input", facts));
+  view.querySelectorAll(".chip[data-date]").forEach(b => b.addEventListener("click", () => {
+    view.querySelectorAll(".chip[data-date]").forEach(x => x.setAttribute("aria-pressed","false"));
+    b.setAttribute("aria-pressed","true"); chosen = b.dataset.date;
+    if(chosen !== "now") dateInput.value = chosen;
+  }));
+  dateInput.addEventListener("change", () => { chosen = dateInput.value; view.querySelectorAll(".chip[data-date]").forEach(x => x.setAttribute("aria-pressed", x.dataset.date === chosen ? "true" : "false")); });
+  view.querySelectorAll("[data-reason]").forEach(b => b.addEventListener("click", () => b.setAttribute("aria-pressed", b.getAttribute("aria-pressed") === "true" ? "false" : "true")));
+  view.querySelector("#startBtn").addEventListener("click", () => {
+    S.age = +view.querySelector("#fAge").value || 46;
+    S.perDay = +view.querySelector("#fPer").value || 17;
+    S.years = +view.querySelector("#fYears").value || 23;
+    S.price = +view.querySelector("#fPrice").value || 9.5;
+    S.reasons = [...view.querySelectorAll('[data-reason][aria-pressed="true"]')].map(b => b.dataset.reason);
+    if(chosen === "now") S.quitAt = now();
+    else { const v = dateInput.value; if(!v){ toast("Choisissez une date"); return; } const [y,m,d] = v.split("-").map(Number); S.quitAt = new Date(y,m-1,d,0,0,0).getTime(); }
+    commit(); toast("Jour J enregistré");
+    window.scrollTo({top:0});
+  });
+}
+
+function checklistItems(){
+  const m = S.method ? METHODS[S.method] : null;
+  const items = [
+    {id:"method", txt:"Choisir mon traitement (onglet « Mon plan »)", auto: !!S.method},
+    {id:"doc", txt: S.method === "varenicline" || S.method === "cytisine" ? "Prendre rendez-vous chez le médecin pour l'ordonnance" : "Passer en pharmacie pour choisir les bons dosages"},
+    {id:"line", txt:"Appeler la ligne stop-tabac 0848 000 181 (gratuit, lun–ven 11 h–19 h)"},
+    {id:"plans", txt:"Préparer mes réponses « Si… alors… » pour mes situations à risque", auto: Object.keys(S.plans).length >= 3},
+    {id:"tell", txt:"Prévenir mes proches et leur dire comment m'aider"},
+    {id:"clean", txt:"La veille : jeter cigarettes, briquets et cendriers (maison, voiture, poches)"}
+  ];
+  if(m && m.weeksBefore >= 1) items.splice(2,0,{id:"pre", txt: S.method === "nrt" ? "Option : coller le patch 2 à 4 semaines avant le jour J" : "Commencer le médicament 1 semaine avant le jour J"});
+  return items;
+}
+
+function vToday(){
+  const before = now() < S.quitAt;
+  const reasons = S.reasons.length ? `<div class="reasonlist">${S.reasons.map(r=>`<span>${esc(r)}</span>`).join("")}</div>` : "";
+  if(before){
+    const ms = S.quitAt - now(), days = Math.ceil(ms/DAY);
+    const items = checklistItems();
+    const doneN = items.filter(i => i.auto || S.checklist[i.id]).length;
+    return `<div class="stack-lg">
+    <section class="card hero air stack">
+      <p class="eyebrow">Votre jour J · ${esc(dateFR(S.quitAt))}</p>
+      <div class="row" style="align-items:baseline"><span class="big num">${days}</span><span class="num" style="font-size:1.4rem;font-weight:750">${days===1?"jour":"jours"} pour vous préparer</span></div>
+      <p>D'ici là, fumez normalement. Le but n'est pas de diminuer : c'est de préparer un arrêt net et complet.</p>
+      ${reasons}
+    </section>
+    <section class="card stack">
+      <div class="row" style="justify-content:space-between"><h2>Préparation</h2><span class="num muted">${doneN}/${items.length}</span></div>
+      <div class="progress" aria-hidden="true"><i style="width:${doneN/items.length*100}%"></i></div>
+      <div>${items.map(i => `<label class="check" for="ck_${i.id}"><input type="checkbox" id="ck_${i.id}" data-check="${i.id}" ${i.auto||S.checklist[i.id]?"checked":""} ${i.auto?"disabled":""}><span>${esc(i.txt)}</span></label>`).join("")}</div>
+    </section>
+    ${S.method ? "" : `<section class="card ember stack"><h3>Il manque le plus important</h3><p>Un traitement efficace combiné à un accompagnement augmente nettement les chances d'arrêt durable par rapport à un essai seul.</p><button class="btn primary" type="button" data-go="plan">Choisir mon traitement</button></section>`}
+    <section class="stack"><button class="btn block" type="button" data-act="quitnow">Je suis prêt : j'arrête maintenant</button></section>
+    </div>`;
+  }
+  const ms = cleanMs(), D = dur(ms), ph = PHASES[phase()];
+  const saved = notSmoked() * cigPrice();
+  const next = MILESTONES.find(m => m.t > ms);
+  const prev = [...MILESTONES].reverse().find(m => m.t <= ms);
+  const prog = next ? Math.min(100, (ms - (prev?prev.t:0)) / (next.t - (prev?prev.t:0)) * 100) : 100;
+  const beaten = S.cravings.filter(c => c.ok).length;
+  const lap = S.lapses.length;
+  return `<div class="stack-lg">
+  ${reasons || lap ? `<section class="card air stack">
+    <p class="eyebrow">${lap ? "Compteur reparti de votre dernière cigarette · vos raisons" : "Vos raisons"}</p>
+    ${reasons}${S.custom ? `<p><strong>${esc(S.custom)}</strong></p>` : ""}
+  </section>` : ""}
+  <section class="stats">
+    <div class="stat"><span class="v num">${fmtInt(notSmoked())}</span><span class="l">cigarettes non fumées</span></div>
+    <div class="stat"><span class="v num">${fmtCHF(saved)}</span><span class="l">CHF économisés</span></div>
+    <div class="stat"><span class="v num">${beaten}</span><span class="l">envies surmontées</span></div>
+  </section>
+  <section class="card stack">
+    <p class="eyebrow">Ce qui se passe en ce moment</p>
+    <h2>${ph.t}</h2>
+    <p>${ph.b}</p>
+  </section>
+  ${next ? `<section class="card stack">
+    <div class="row" style="justify-content:space-between"><p class="eyebrow">Prochaine étape pour votre corps</p><span class="num muted">${next.w}</span></div>
+    <p>${esc(next.txt)}</p>
+    <div class="progress" aria-label="Progression"><i style="width:${prog.toFixed(1)}%"></i></div>
+    <button class="btn" type="button" data-go="health">Voir toutes les étapes</button>
+  </section>` : ""}
+  ${S.method ? "" : `<section class="card ember stack"><h3>Pas encore de traitement choisi</h3><p>Il n'est jamais trop tard pour en ajouter un, même après le jour J.</p><button class="btn primary" type="button" data-go="plan">Voir les options</button></section>`}
+  ${vCravingChart()}
+  </div>`;
+}
+
+function vCravingChart(){
+  if(!S.cravings.length) return `<section class="card stack"><h3>Vos envies</h3><p class="muted">Chaque fois que vous utilisez le bouton « J'ai envie de fumer », l'envie est notée ici. Vous verrez qu'elles deviennent plus rares et plus faibles.</p></section>`;
+  const days = 14, start = new Date(); start.setHours(0,0,0,0); start.setDate(start.getDate()-days+1);
+  const counts = Array.from({length:days}, (_,i) => { const a = start.getTime()+i*DAY, b = a+DAY; return S.cravings.filter(c => c.t>=a && c.t<b).length; });
+  const max = Math.max(4, ...counts);
+  const W = 340, H = 130, pl = 22, pb = 22, pt = 8, bw = (W-pl)/days;
+  const ticks = [0, Math.round(max/2), max];
+  let bars = "";
+  counts.forEach((c,i) => { const h = c/max*(H-pb-pt); bars += `<rect x="${(pl+i*bw+2).toFixed(1)}" y="${(H-pb-h).toFixed(1)}" width="${(bw-4).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="var(--air)"><title>${c} envie(s)</title></rect>`; });
+  const grid = ticks.map(t => { const y = H-pb-t/max*(H-pb-pt); return `<line x1="${pl}" x2="${W}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-dasharray="${t?"3 3":"0"}"/><text x="${pl-5}" y="${(y+4).toFixed(1)}" text-anchor="end">${t}</text>`; }).join("");
+  const lab = [0, 7, 13].map(i => { const d = new Date(start.getTime()+i*DAY); return `<text x="${(pl+i*bw+bw/2).toFixed(1)}" y="${H-5}" text-anchor="middle">${i===13?"auj.":d.toLocaleDateString("fr-CH",{day:"numeric",month:"numeric"})}</text>`; }).join("");
+  const trig = {}; S.cravings.forEach(c => (c.trig||[]).forEach(t => trig[t] = (trig[t]||0)+1));
+  const top = Object.entries(trig).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([id,n]) => `${esc((TRIGGERS.find(x=>x.id===id)||{label:id}).label)} (${n})`);
+  return `<section class="card stack chart">
+    <div class="row" style="justify-content:space-between"><h3>Vos envies, 14 derniers jours</h3><span class="num muted small">${S.cravings.length} au total</span></div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Nombre d'envies par jour sur 14 jours">${grid}${bars}${lab}</svg>
+    ${top.length ? `<p class="small"><strong>Vos situations les plus fréquentes :</strong> ${top.join(", ")}. Vérifiez que vous avez un plan « Si… alors… » pour chacune.</p>` : ""}
+  </section>`;
+}
+
+function vPlan(){
+  const order = ["varenicline","nrt","ecig","cytisine","none"];
+  const cards = order.map(k => {
+    const m = METHODS[k], chosen = S.method === k;
+    const meter = m.hi ? `<div class="meter"><span class="small muted" style="min-width:92px">Arrêt à 6 mois</span><div class="bar" aria-hidden="true"><i style="left:${m.lo/20*100}%;width:${(m.hi-m.lo)/20*100}%"></i></div><span class="num small">${m.per100}</span></div>` : `<p class="small muted">Arrêt à 6 mois : ${m.per100}</p>`;
+    return `<article class="card method ${chosen?"chosen":""}">
+      <div class="row" style="justify-content:space-between"><h3>${m.name}</h3><span class="tag ${k==="none"?"ember":"air"}">${m.tag}</span></div>
+      <p>${m.pitch}</p>
+      ${meter}
+      ${m.estimate ? `<p class="small muted">Efficacité estimée par Cochrane comme comparable à la varénicline et à la cytisine.</p>` : ""}
+      <details ${chosen?"open":""}><summary>Comment faire, concrètement</summary><ul class="clean" style="margin-top:8px">${m.how.map(h=>`<li>${h}</li>`).join("")}</ul><p class="small muted" style="margin-top:8px"><strong>Coût :</strong> ${m.cost}</p></details>
+      <button class="btn ${chosen?"primary":""}" type="button" data-method="${k}">${chosen?"✓ Mon choix":"Choisir cette option"}</button>
+    </article>`;
+  }).join("");
+  const plans = TRIGGERS.map(t => {
+    const on = S.plans[t.id] !== undefined;
+    return `<div class="ifthen">
+      <button class="chip" type="button" data-trig="${t.id}" aria-pressed="${on}" style="align-self:flex-start">${esc(t.label)}</button>
+      ${on ? `<label class="f" for="pl_${t.id}"><span class="if">Si : ${esc(t.label.toLowerCase())}, alors…</span><textarea id="pl_${t.id}" data-plan="${t.id}">${esc(S.plans[t.id] || t.plan)}</textarea></label>` : ""}
+    </div>`;
+  }).join("");
+  return `<div class="stack-lg">
+  <section class="stack">
+    <p class="eyebrow">Mon plan</p>
+    <h1>Un traitement + un accompagnement</h1>
+    <p>C'est la combinaison la plus efficace : un médicament ou une aide à la nicotine, plus quelques entretiens avec un conseiller. Ensemble, ils augmentent les chances d'arrêt durable de plus de 80 % par rapport à un simple conseil.</p>
+    <p class="small muted">Les chiffres ci-dessous viennent de la grande revue Cochrane 2023 : nombre de personnes sur 100 encore sans tabac après 6 mois ou plus. Demandez conseil à votre médecin ou pharmacien avant de commencer, surtout en cas de maladie du cœur ou de traitement en cours.</p>
+  </section>
+  <section class="stack">${cards}</section>
+
+  <section class="card stack">
+    <h2>Mes plans « Si… alors… »</h2>
+    <p class="muted">Décider à l'avance quoi faire dans chaque situation à risque aide réellement à arrêter (méta-analyse 2019). Touchez vos situations, puis ajustez la réponse avec vos mots.</p>
+    <div>${plans}</div>
+  </section>
+
+  <section class="card stack">
+    <h2>Mes raisons</h2>
+    <div class="row">${REASONS.map(r => `<button class="chip" type="button" data-reason2="${esc(r)}" aria-pressed="${S.reasons.includes(r)}">${esc(r)}</button>`).join("")}</div>
+    <label class="f" for="fCustom">Ma raison personnelle, avec mes mots<input id="fCustom" type="text" maxlength="120" placeholder="Ex. : être là au mariage de ma fille" value="${esc(S.custom||"")}"></label>
+  </section>
+
+  <section class="card stack">
+    <h2>Mes réglages</h2>
+    <div class="grid2">
+      <label class="f" for="sAge">Âge<input id="sAge" type="number" min="18" max="99" value="${S.age}"></label>
+      <label class="f" for="sYears">Années de tabac<input id="sYears" type="number" min="1" max="70" value="${S.years}"></label>
+      <label class="f" for="sPer">Cigarettes par jour (avant l'arrêt)<input id="sPer" type="number" min="1" max="80" value="${S.perDay}"></label>
+      <label class="f" for="sPrice">Prix d'un paquet (CHF)<input id="sPrice" type="number" step="0.1" min="1" value="${S.price}"></label>
+    </div>
+    <p class="small muted">Jour J : ${S.quitAt ? esc(dateFR(S.quitAt)) : "pas encore fixé"} · ${mode === "account" ? "Données privées, enregistrées sur votre compte." : "Données enregistrées uniquement dans ce navigateur."}</p>
+    <div class="row"><button class="btn" type="button" data-act="changedate">Changer de jour J</button></div>
+    <div id="resetZone"><button class="btn ember" type="button" data-act="askreset">Tout effacer</button></div>
+  </section>
+  </div>`;
+}
+
+function vHealth(){
+  const ms = S.quitAt && now() >= S.quitAt ? cleanMs() : 0;
+  const nextIdx = MILESTONES.findIndex(m => m.t > ms);
+  const py = packYears();
+  const tl = MILESTONES.map((m,i) => `<li class="${m.t<=ms?"done":""} ${i===nextIdx&&ms>0?"next":""}"><span class="when">${m.w}</span><span class="dot" aria-hidden="true"></span><div><p>${esc(m.txt)}</p><p class="src">${esc(m.src)}</p></div></li>`).join("");
+  return `<div class="stack-lg">
+  <section class="stack">
+    <p class="eyebrow">Ma santé</p>
+    <h1>À ${S.age} ans, arrêter rapporte gros, et vite</h1>
+  </section>
+
+  <section class="card air stack">
+    <h2>Des années de vie à récupérer</h2>
+    <p>Dans une étude sur plus de 200 000 adultes, ceux qui arrêtent entre 45 et 54 ans gagnent <strong>environ 6 ans de vie</strong> par rapport à ceux qui continuent.</p>
+    <p>Une étude plus récente sur 1,5 million de personnes montre que les ex-fumeurs reviennent près de la survie des non-fumeurs <strong>10 ans après l'arrêt</strong>, et qu'environ la moitié de ce bénéfice est acquise <strong>dans les 3 premières années</strong>.</p>
+    <p class="small muted">Jha et al., NEJM 2013 ; Cho et al., NEJM Evidence 2024.</p>
+  </section>
+
+  <section class="card stack">
+    <h2>Votre corps, étape par étape</h2>
+    <p class="small muted">${ms>0 ? "Les points pleins sont déjà atteints." : "Le compteur démarre à votre jour J."}</p>
+    <ol class="timeline">${tl}</ol>
+  </section>
+
+  <section class="card stack">
+    <h2>Ce qui vous concerne directement</h2>
+    <div class="stack">
+      <div><h3>Vos poumons</h3><p>À ${S.perDay} cigarettes par jour pendant ${S.years} ans, vous êtes à environ <strong class="num">${py.toFixed(1)}</strong> paquets-années. ${py >= 20 ? "C'est le seuil" : "Le seuil"} à partir duquel des recommandations internationales proposent, dès 50 ans, un scanner annuel du poumon à faible dose. Parlez-en à votre médecin le moment venu.</p></div>
+      <div><h3>Votre vie sexuelle</h3><p>Le tabac abîme les petits vaisseaux : les fumeurs ont nettement plus de troubles de l'érection. Dans une étude, l'érection s'est améliorée chez au moins 1 ex-fumeur sur 4 après un an, et chez aucun de ceux qui ont continué.</p></div>
+      <div><h3>Votre moral</h3><p>La cigarette semble calmer, mais elle calme surtout le manque qu'elle crée. Après l'arrêt, anxiété, déprime et stress <strong>diminuent</strong> en moyenne par rapport à ceux qui continuent, d'un effet comparable à celui d'un antidépresseur.</p></div>
+      <div><h3>Votre poids</h3><p>En moyenne, on prend 4 à 5 kg la première année, surtout pendant les 3 premiers mois. Les écarts sont grands : environ 1 personne sur 6 perd même du poids. Une marche quotidienne aide à la fois le poids et les envies. Ces kilos pèsent bien moins sur la santé que la cigarette.</p></div>
+    </div>
+    <p class="small muted">USPSTF 2021 ; Pourmand et al., BJU Int 2004 ; Taylor et al., BMJ 2014 ; Aubin et al., BMJ 2012.</p>
+  </section>
+  </div>`;
+}
+
+function vHelp(){
+  const sources = [
+    ["Cochrane 2023 : médicaments et e-cigarettes, méta-analyse en réseau (Lindson et al.)","https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD015226.pub2/full"],
+    ["Cochrane 2025-2026 : e-cigarettes pour arrêter de fumer","https://www.cochranelibrary.com/cdsr/doi/10.1002/14651858.CD010216.pub10/full"],
+    ["Cochrane 2016 : traitement + accompagnement combinés","https://pubmed.ncbi.nlm.nih.gov/27009521/"],
+    ["Cochrane : substituts combinés et patch avant le jour J","https://www.cochrane.org/evidence/CD013308_which-combinations-stop-smoking-medications-and-e-cigarettes-help-people-quit"],
+    ["Cochrane 2019 : prévention de la rechute (varénicline prolongée)","https://www.cochrane.org/evidence/CD003999_do-any-treatments-help-people-who-have-successfully-quit-smoking-avoid-starting-smoking-again"],
+    ["Cochrane : arrêt brutal vs réduction progressive","https://cochranelibrary.com/cdsr/doi/10.1002/14651858.CD013183.pub2/pdf/CDSR/CD013183/CD013183_abstract.pdf"],
+    ["Courtney et al., JAMA 2021 : cytisine vs varénicline","https://pmc.ncbi.nlm.nih.gov/articles/PMC8261608/"],
+    ["Jha et al., NEJM 2013 : années de vie gagnées selon l'âge d'arrêt","https://www.dcp-3.org/node/1230"],
+    ["Cho et al., NEJM Evidence 2024 : bénéfices à court et long terme","https://munin.uit.no/handle/10037/36559?show=full"],
+    ["OMS : bénéfices de l'arrêt dans le temps","https://www.who.int/tobacco/quitting/benefits/en/"],
+    ["Taylor et al., BMJ 2014 : santé mentale après l'arrêt","https://pubmed.ncbi.nlm.nih.gov/24524926/"],
+    ["Aubin et al., BMJ 2012 : prise de poids après l'arrêt","https://www.bmj.com/node/203463"],
+    ["Ussher et al., Addiction 2013 : l'activité physique réduit l'envie","https://www.stir.ac.uk/research/hub/publication/498926"],
+    ["McWilliams et al., Health Psychology 2019 : plans « Si… alors… »","https://eprints.whiterose.ac.uk/154864/"],
+    ["Pourmand et al., BJU Int 2004 : érection après l'arrêt","https://pubmed.ncbi.nlm.nih.gov/15610111/"],
+    ["USPSTF 2021 : dépistage du cancer du poumon","https://ascopost.com/news/march-2021/uspstf-issues-final-recommendation-statement-on-screening-for-lung-cancer"],
+    ["stop-tabac.ch : varénicline en Suisse","https://stop-tabac.ch/faits/substituts-nicotiniques-et-medicaments/medikamente/vareniclin"],
+    ["stop-tabac.ch : cytisine en Suisse","https://stop-tabac.ch/faits/substituts-nicotiniques-et-medicaments/medikamente/cytisin-tabexr-desmoxanr-cravvrtodacitanr"],
+    ["OFSP : il vaut toujours la peine d'arrêter","https://www.bag.admin.ch/fr/il-vaut-toujours-la-peine-darreter-de-fumer"]
+  ];
+  return `<div class="stack-lg">
+  <section class="stack"><p class="eyebrow">Aide</p><h1>Vous n'êtes pas seul</h1></section>
+
+  <section class="card air stack">
+    <h2>Ligne stop-tabac</h2>
+    <p>Conseil personnalisé, gratuit et anonyme. Un appel avec un conseiller ou un médecin double les chances de réussir.</p>
+    <div class="row" style="justify-content:space-between"><span class="phone" id="phoneNum">0848 000 181</span><button class="btn" type="button" data-act="copyphone">Copier le numéro</button></div>
+    <p class="small muted">Du lundi au vendredi, 11 h à 19 h. Rendez-vous de rappel et conseil en ligne sur <a href="https://stop-tabac.ch/service-de-conseil" target="_blank" rel="noopener">stop-tabac.ch</a>.</p>
+  </section>
+
+  <section class="card stack">
+    <h3>À Genève</h3>
+    <p>Le programme Déclic des tabacologues du CIPRET propose un accompagnement gratuit : <a href="https://www.programmedeclic.ch/" target="_blank" rel="noopener">programmedeclic.ch</a>. Votre médecin de famille et votre pharmacien peuvent aussi vous suivre.</p>
+  </section>
+
+  <section class="card ember stack">
+    <h2>J'ai fumé</h2>
+    <p>Ce n'est pas un échec, c'est une information. La plupart des ex-fumeurs ont fait plusieurs tentatives. Ce qui compte, c'est de ne pas laisser une cigarette devenir un paquet : la majorité des personnes qui refument reprennent leur rythme habituel dans les 24 heures.</p>
+    <div class="row">
+      <button class="btn" type="button" data-act="lapse1">J'ai fumé 1 cigarette</button>
+      <button class="btn" type="button" data-act="lapseN">J'ai fumé plusieurs</button>
+    </div>
+    ${S.lapses.length ? `<p class="small muted">${S.lapses.length} écart(s) noté(s). Le compteur repart de la dernière cigarette, vos économies et vos progrès sont gardés.</p>` : ""}
+  </section>
+
+  <section class="card stack">
+    <h2>Les sources</h2>
+    <p class="small muted">Chaque chiffre de l'application vient d'une étude ou d'un organisme de santé, vérifié dans au moins deux sources.</p>
+    <ol class="clean srcs">${sources.map(([t,u]) => `<li><a href="${u}" target="_blank" rel="noopener">${esc(t)}</a></li>`).join("")}</ol>
+    <p class="small muted">Cette application informe et accompagne ; elle ne remplace pas un avis médical.</p>
+  </section>
+  </div>`;
+}
+
+/* ---------- Interactions générales ---------- */
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => { tab = b.dataset.tab; render(); window.scrollTo({top:0}); }));
+
+view.addEventListener("click", e => {
+  const t = e.target.closest("button,input[type=checkbox]");
+  if(!t) return;
+  if(t.dataset.go){ tab = t.dataset.go; render(); window.scrollTo({top:0}); return; }
+  if(t.dataset.check){ S.checklist[t.dataset.check] = t.checked; S.lastEdit = Date.now(); save(); setTimeout(render, 150); return; }
+  if(t.dataset.method){ S.method = t.dataset.method; commit(); toast("Traitement enregistré"); return; }
+  if(t.dataset.trig){ const id = t.dataset.trig; if(S.plans[id] !== undefined) delete S.plans[id]; else S.plans[id] = TRIGGERS.find(x=>x.id===id).plan; commit(); return; }
+  if(t.dataset.reason2){ const r = t.dataset.reason2; S.reasons = S.reasons.includes(r) ? S.reasons.filter(x=>x!==r) : [...S.reasons, r]; commit(); return; }
+  const a = t.dataset.act;
+  if(a === "quitnow"){ S.quitAt = now(); commit(); toast("C'est parti. Pas une seule bouffée."); }
+  if(a === "changedate"){ S.quitAt = null; S.lapses = []; tab = "today"; commit(); }
+  if(a === "askreset"){ document.getElementById("resetZone").innerHTML = `<div class="stack"><p><strong>Effacer toutes vos données ?</strong> Jour J, envies, plans et raisons seront supprimés.</p><div class="row"><button class="btn ember" type="button" data-act="reset">Oui, tout effacer</button><button class="btn" type="button" data-act="noreset">Annuler</button></div></div>`; }
+  if(a === "noreset") render();
+  if(a === "reset"){ S = DEFAULTS(); tab = "today"; commit(); toast("Données effacées"); }
+  if(a === "copyphone"){
+    const txt = "0848000181";
+    try{ navigator.clipboard.writeText(txt).then(() => toast("Numéro copié"), () => selectPhone()); }catch(err){ selectPhone(); }
+  }
+  if(a === "lapse1" || a === "lapseN") openLapse(a === "lapse1" ? 1 : 3);
+});
+view.addEventListener("input", e => {
+  const t = e.target;
+  if(t.dataset.plan){ S.plans[t.dataset.plan] = t.value; S.lastEdit = Date.now(); save(); }
+  if(t.id === "fCustom"){ S.custom = t.value; S.lastEdit = Date.now(); save(); }
+  if(t.id === "sPer"){ const v = +t.value; if(v > 0){ S.perDay = v; S.lastEdit = Date.now(); save(); } }
+  if(t.id === "sAge"){ const v = +t.value; if(v >= 18){ S.age = v; S.lastEdit = Date.now(); save(); } }
+  if(t.id === "sYears"){ const v = +t.value; if(v > 0){ S.years = v; S.lastEdit = Date.now(); save(); } }
+  if(t.id === "sPrice"){ const v = +t.value; if(v > 0){ S.price = v; S.lastEdit = Date.now(); save(); } }
+});
+function selectPhone(){ const el = document.getElementById("phoneNum"); const r = document.createRange(); r.selectNodeContents(el); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Numéro sélectionné, copiez-le"); }
+
+let toastT;
+function toast(msg){ const el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 2600); }
+
+/* ---------- Panneau « J'ai envie de fumer » ---------- */
+const sos = document.getElementById("sos");
+let sosTimer = null, breathTimer = null, sosEnd = 0, sosData = null;
+const R = 100, CIRC = 2*Math.PI*R;
+
+function openSOS(){
+  sosData = {t: now(), trig: [], i: 3};
+  const allReasons = [...S.reasons, ...(S.custom ? [S.custom] : [])];
+  const m = S.method ? METHODS[S.method] : null;
+  const fast = S.method === "nrt" ? "Prenez une gomme ou une pastille maintenant." : S.method === "ecig" ? "Prenez quelques bouffées de votre cigarette électronique." : null;
+  sos.innerHTML = `<div class="wrap">
+    <div class="row" style="justify-content:space-between"><p class="eyebrow">Envie de fumer</p><button class="btn" type="button" data-sos="close">Fermer</button></div>
+    <h1 id="sosTitle">Elle va passer. Tenez 5 minutes.</h1>
+    <p class="muted">Une envie dure en général 3 à 5 minutes, même si elle paraît très forte. Respirez avec le cercle.</p>
+    <div class="breath">
+      <div class="ring">
+        <div class="lung" id="lung"></div>
+        <svg viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="${R}" stroke="var(--sunk)" stroke-width="10" fill="none"/><circle id="arc" cx="110" cy="110" r="${R}" stroke="var(--air)" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="0"/></svg>
+        <div class="time"><span class="num" id="sosClock">5:00</span><span class="small muted">restantes</span></div>
+      </div>
+      <p class="cue" id="cue" aria-live="polite">Inspirez…</p>
+    </div>
+    ${allReasons.length ? `<section class="stack"><p class="eyebrow">Pourquoi vous faites ça</p><div class="reasonlist">${allReasons.map(r=>`<span>${esc(r)}</span>`).join("")}</div></section>` : ""}
+    <section class="card stack">
+      <h3>Pendant ce temps</h3>
+      <ul class="clean">
+        ${fast ? `<li><strong>${fast}</strong></li>` : ""}
+        <li>Levez-vous et marchez 5 à 10 minutes, même dans l'appartement. L'effort réduit l'envie pendant de longues minutes.</li>
+        <li>Buvez un grand verre d'eau froide.</li>
+        <li>Changez de pièce ou d'activité : l'envie est liée au lieu.</li>
+      </ul>
+    </section>
+    <section class="card stack">
+      <h3>Qu'est-ce qui a déclenché l'envie ?</h3>
+      <div class="row" id="sosTrig">${TRIGGERS.map(t=>`<button class="chip" type="button" data-strig="${t.id}" aria-pressed="false">${esc(t.label)}</button>`).join("")}</div>
+      <div id="sosPlan"></div>
+      <label class="f" for="sosInt">Force de l'envie : <span id="sosIntV" class="num">3</span> / 5<input id="sosInt" type="range" min="1" max="5" value="3" style="min-height:32px;padding:0;border:none;background:none"></label>
+    </section>
+    <div class="stack">
+      <button class="btn primary block" type="button" data-sos="won">L'envie est passée, je n'ai pas fumé</button>
+      <button class="btn ember block" type="button" data-sos="lost">J'ai fumé</button>
+    </div>
+  </div>`;
+  sos.hidden = false;
+  document.body.style.overflow = "hidden";
+  sosEnd = now() + 5*MIN;
+  tickSOS(); sosTimer = setInterval(tickSOS, 250);
+  breathe();
+  sos.querySelector('[data-sos="close"]').focus();
+}
+function tickSOS(){
+  const left = Math.max(0, sosEnd - now());
+  const s = Math.ceil(left/1000);
+  const clock = document.getElementById("sosClock"); if(!clock) return;
+  clock.textContent = `${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`;
+  document.getElementById("arc").setAttribute("stroke-dashoffset", (CIRC*(1-left/(5*MIN))).toFixed(1));
+  if(left <= 0){ clearInterval(sosTimer); sosTimer = null; document.getElementById("cue").textContent = "5 minutes tenues. Bravo."; clearTimeout(breathTimer); }
+}
+function breathe(){
+  const lung = document.getElementById("lung"), cue = document.getElementById("cue");
+  if(!lung) return;
+  const inhale = () => { if(!sosTimer) return; lung.className = "lung in"; cue.textContent = "Inspirez lentement par le nez… 4 s"; breathTimer = setTimeout(exhale, 4000); };
+  const exhale = () => { if(!sosTimer) return; lung.className = "lung out"; cue.textContent = "Soufflez doucement par la bouche… 6 s"; breathTimer = setTimeout(inhale, 6000); };
+  inhale();
+}
+function closeSOS(){ clearInterval(sosTimer); clearTimeout(breathTimer); sosTimer = null; sos.hidden = true; sos.innerHTML = ""; document.body.style.overflow = ""; document.getElementById("sosOpen").focus(); }
+
+sos.addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.strig){
+    const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on);
+    const id = b.dataset.strig; sosData.trig = on ? [...sosData.trig, id] : sosData.trig.filter(x=>x!==id);
+    const plans = sosData.trig.map(tid => { const t = TRIGGERS.find(x=>x.id===tid); const p = S.plans[tid] || t.plan; return `<p><strong>Votre plan, ${esc(t.label.toLowerCase())} :</strong> ${esc(p)}</p>`; }).join("");
+    document.getElementById("sosPlan").innerHTML = plans ? `<div class="card air stack">${plans}</div>` : "";
+    return;
+  }
+  const a = b.dataset.sos;
+  if(a === "close") closeSOS();
+  if(a === "won"){ logCraving(true); closeSOS(); toast("Envie surmontée. Une de moins."); render(); }
+  if(a === "lost"){ logCraving(false); closeSOS(); openLapse(1); }
+});
+sos.addEventListener("input", e => { if(e.target.id === "sosInt"){ sosData.i = +e.target.value; document.getElementById("sosIntV").textContent = e.target.value; } });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && !sos.hidden) closeSOS(); });
+document.getElementById("sosOpen").addEventListener("click", openSOS);
+
+function logCraving(ok){
+  S.cravings.push({t: sosData.t, i: sosData.i, trig: sosData.trig, ok});
+  if(S.cravings.length > 600) S.cravings = S.cravings.slice(-600);
+  S.lastEdit = Date.now(); save();
+}
+
+/* ---------- Écart / rechute ---------- */
+function openLapse(n){
+  if(!S.quitAt || now() < S.quitAt){ toast("Votre jour J n'a pas encore commencé"); return; }
+  const firstWeek = (now() - S.quitAt) < 7*DAY;
+  sos.innerHTML = `<div class="wrap">
+    <p class="eyebrow">Un écart</p>
+    <h1 id="sosTitle">Une cigarette n'efface pas vos progrès</h1>
+    <p>Votre corps a déjà commencé à réparer. Ce qui compte maintenant, c'est la prochaine heure, pas la cigarette d'avant.</p>
+    <section class="card stack">
+      <h3>Tout de suite</h3>
+      <ul class="clean">
+        <li>Jetez le reste du paquet maintenant, pas demain.</li>
+        <li>Ne vous dites pas « c'est fichu, autant continuer ». C'est précisément ce piège qui transforme un écart en rechute.</li>
+        ${firstWeek ? `<li><strong>Vous êtes dans la première semaine</strong> : c'est la période où un écart pèse le plus. Appelez la ligne stop-tabac (0848 000 181) ou votre pharmacien dès aujourd'hui pour ajuster votre traitement.</li>` : `<li>Si vous prenez un traitement, continuez-le normalement. Il est peut-être sous-dosé : parlez-en au pharmacien.</li>`}
+        <li>Notez la situation : c'est un déclencheur à préparer avec un plan « Si… alors… ».</li>
+      </ul>
+    </section>
+    <label class="f" for="lapseN">Combien de cigarettes ?<input id="lapseN" type="number" min="1" max="60" value="${n}"></label>
+    <div class="stack">
+      <button class="btn primary block" type="button" data-lapse="save">Je note et je repars maintenant</button>
+      <button class="btn block" type="button" data-lapse="cancel">Annuler</button>
+      <button class="btn ember block" type="button" data-lapse="restart">J'ai repris pour de bon : fixer un nouveau jour J</button>
+    </div>
+  </div>`;
+  sos.hidden = false; document.body.style.overflow = "hidden";
+}
+sos.addEventListener("click", e => {
+  const b = e.target.closest("[data-lapse]"); if(!b) return;
+  const a = b.dataset.lapse;
+  if(a === "save"){ const n = Math.max(1, +document.getElementById("lapseN").value || 1); S.lapses.push({t: now(), n}); closeSOS(); commit(); toast("Noté. Le compteur repart maintenant."); }
+  if(a === "cancel") closeSOS();
+  if(a === "restart"){ S.quitAt = null; S.lapses = []; closeSOS(); tab = "today"; commit(); toast("Choisissez un nouveau jour J. Chaque tentative rapproche du but."); }
+});
+
+/* Mise à jour du compteur chaque minute sans perturber la saisie */
+setInterval(() => { renderBand(); if(tab === "today" && S.quitAt && sos.hidden && !document.activeElement.matches("input,textarea")) render(); }, 30000);
+
+/* Le mot « ARRÊTE. » occupe toute la largeur, quelle que soit la police chargée */
+function fitWord(){
+  const w = document.querySelector(".stopword"); if(!w) return;
+  const box = w.parentElement.clientWidth - parseFloat(getComputedStyle(w.parentElement).paddingLeft) - parseFloat(getComputedStyle(w.parentElement).paddingRight);
+  w.style.animation = "none"; w.style.letterSpacing = "-.012em"; w.style.fontSize = "100px";
+  const size = Math.min(190, Math.max(48, 100 * box / w.scrollWidth * 0.98));
+  w.style.fontSize = size + "px"; w.style.letterSpacing = ""; w.style.animation = "";
+}
+window.addEventListener("resize", fitWord);
+fitWord();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitWord);
+
+render();
+initStore();
+})();
+</script>
+
+</body>
+</html>
